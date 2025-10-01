@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -31,7 +32,8 @@ class CustomerAuthController extends Controller
         
         if (auth()->attempt($data)) {
             //auth()->user() is coming from laravel auth:api middleware
-            $token = auth()->user()->createToken('RestaurantCustomerAuth')->accessToken;
+
+            $token = auth()->user()->createToken('RestaurantCustomerAuth')->plainTextToken;
             if(!auth()->user()->status)
             {
                 $errors = [];
@@ -55,9 +57,9 @@ class CustomerAuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'f_name' => 'required',
-            //'l_name' => 'required',
-            'email' => 'required|unique:users',
-            'phone' => 'required|unique:users',
+            // 'l_name' => 'required',
+            'email' => 'required',
+            'phone' => 'required',
             'password' => 'required|min:6',
         ], [
             'f_name.required' => 'The first name field is required.',
@@ -69,15 +71,17 @@ class CustomerAuthController extends Controller
         }
         $user = User::create([
             'f_name' => $request->f_name,
-            //'l_name' => $request->l_name,
+            // 'l_name' => $request->l_name,
             'email' => $request->email,
             'phone' => $request->phone,
-            'password' => bcrypt($request->password),
+            'password' => Hash::make($request->password),
         ]);
 
-        $token = $user->createToken('RestaurantCustomerAuth')->accessToken;
+        $user = User::where('email', $request->email)->first();
 
-       
+        // $customer->createToken('RestaurantCustomerAuth',['customer'])->plainTextToken
+        $token = $user->createToken('RestaurantCustomerAuth')->plainTextToken;
+
         return response()->json(['token' => $token,'is_phone_verified' => 0, 'phone_verify_end_url'=>"api/v1/auth/verify-phone" ], 200);
     }
 }
