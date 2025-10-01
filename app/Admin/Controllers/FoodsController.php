@@ -20,7 +20,7 @@ class FoodsController extends AdminController
      *
      * @var string
      */
-    protected $title = 'Foods';
+    protected $title = 'Products';
 
     /**
      * Make a grid builder.
