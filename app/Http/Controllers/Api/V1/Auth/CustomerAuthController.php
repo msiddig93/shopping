@@ -33,7 +33,8 @@ class CustomerAuthController extends Controller
         if (auth()->attempt($data)) {
             //auth()->user() is coming from laravel auth:api middleware
 
-            $token = auth()->user()->createToken('RestaurantCustomerAuth')->plainTextToken;
+            $user = auth()->user();
+            $token = $user->createToken('RestaurantCustomerAuth')->plainTextToken;
             if(!auth()->user()->status)
             {
                 $errors = [];
@@ -43,7 +44,10 @@ class CustomerAuthController extends Controller
                 ], 403);
             }
           
-            return response()->json(['token' => $token, 'is_phone_verified'=>auth()->user()->is_phone_verified], 200);
+            return response()->json([
+                'token' => $token, 
+                'customer' => $user->only('id', 'f_name', 'email', 'phone'),
+                'is_phone_verified'=>auth()->user()->is_phone_verified], 200);
         } else {
             $errors = [];
             array_push($errors, ['code' => 'auth-001', 'message' => 'Unauthorized.']);
@@ -82,6 +86,10 @@ class CustomerAuthController extends Controller
         // $customer->createToken('RestaurantCustomerAuth',['customer'])->plainTextToken
         $token = $user->createToken('RestaurantCustomerAuth')->plainTextToken;
 
-        return response()->json(['token' => $token,'is_phone_verified' => 0, 'phone_verify_end_url'=>"api/v1/auth/verify-phone" ], 200);
+        return response()->json([
+            'token' => $token,
+            'customer' => $user->only('id', 'f_name', 'email', 'phone'),
+            'is_phone_verified' => 0, 
+            'phone_verify_end_url'=>"api/v1/auth/verify-phone" ], 200);
     }
 }
